@@ -1,0 +1,180 @@
+/* static/style.css */
+body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 600px; /* Reduzido para manter consistência */
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+h1 {
+    text-align: center;
+    color: #DCDCDC; /* Mudado para Gainsboro */
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+}
+
+.platform-icons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+.platform-icons img {
+    width: 48px;
+    height: 48px;
+    filter: invert(1);
+    transition: transform 0.3s ease;
+}
+
+.platform-icons img:hover {
+    transform: scale(1.1);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #DCDCDC; (0, 13%, 40%); /* Mudado para Gisboro */
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.8rem;
+    background-color: #2d2d2d;
+    border: 1px solid #DCDCDC; /* Mudado para vermelho */
+    border-radius: 8px;
+    color: #ffffff;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-sizing: border-box; /* Garante que padding não afete largura total */
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #ff3333; /* Vermelho mais claro no focus */
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+}
+
+.checkbox-container {
+    margin: 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Botão de download */
+#download-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: #006400; /* Verde */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2rem; /* Letra maior */
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+#download-button:hover {
+    background-color: #45a049;
+}
+
+/* Botão de cancelar */
+#cancel-button {
+    width: 100%;
+    padding: 1rem;
+    background-color: #8B0000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 1rem;
+}
+
+#cancel-button:hover {
+    background-color: #c82333;
+}
+
+/* Container de progresso */
+.progress-container {
+    display: none;
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background-color: #2d2d2d;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container h3 {
+    color: #DCDCDC; /* Mudado para Gainsboro */
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+/* Barra de progresso */
+.progress-bar {
+    width: 100%;
+    height: 24px;
+    background-color: #1a1a1a;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #DCDCDC; /* Borda Gainsboro */
+}
+
+.progress {
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049); /* Mantido verde para contraste */
+    border-radius: 12px;
+    transition: width 0.3s linear;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.progress-text {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #ffffff;
+}
+
+.status-message {
+    margin-top: 1rem;
+    text-align: center;
+    color: #DCDCDC; /* Gainsboro para mensagens de status */
+}
+
+button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

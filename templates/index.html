@@ -1,0 +1,69 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIDEO DOWNLOADER</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>VIDEO DOWNLOADER</h1>
+        
+        <div class="platform-icons">
+            <img src="{{ url_for('static', filename='icones/youtube.svg') }}" alt="YouTube">
+            <img src="{{ url_for('static', filename='icones/instagram.svg') }}" alt="Instagram">
+            <img src="{{ url_for('static', filename='icones/tiktok.svg') }}" alt="TikTok">
+        </div>
+
+        <form id="download-form">
+            <div class="form-group">
+                <label for="url">Digite o link do vídeo:</label>
+                <input type="url" id="url" name="url" required>
+            </div>
+
+            <div class="form-group">
+                <label for="platform">Escolha a Plataforma:</label>
+                <select id="platform" name="platform" required>
+                    <option value="youtube">YouTube</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="video_quality">Escolha a qualidade do vídeo:</label>
+                <select id="video_quality" name="video_quality">
+                    <option value="best">Melhor Qualidade</option>
+                    <option value="1080">1080p</option>
+                    <option value="720">720p</option>
+                    <option value="480">480p</option>
+                    <option value="360">360p</option>
+                    <option value="240">240p</option>
+                </select>
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="extract_audio" name="extract_audio">
+                <label for="extract_audio">Extrair o áudio?</label>
+            </div>
+
+            <button type="submit" id="download-button">Iniciar Download</button>
+        </form>
+
+        <div id="progress-container" class="progress-container" style="display: none;">
+            <h3>Progresso do Download</h3>
+            <div class="progress-bar">
+                <div id="progress" class="progress">0%</div>
+            </div>
+            <div id="progress-text" class="progress-text"></div>
+            <div id="status-message" class="status-message"></div>
+            <button id="cancel-button" class="cancel-button" style="display: none;">
+                Cancelar Download
+            </button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
