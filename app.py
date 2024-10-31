@@ -66,6 +66,9 @@ def download_video(url, platform, video_quality, extract_audio):
         output_template = os.path.join('downloads', f'%(title)s.%(ext)s')
         
         ydl_opts = {
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
+        },
             'outtmpl': output_template,
             'format': 'bestvideo+bestaudio/best',
             'postprocessors': [{
