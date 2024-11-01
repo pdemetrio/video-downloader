@@ -1,10 +1,13 @@
 # app.py
+
 from flask import Flask, render_template, request, jsonify, Response
 import os
 import threading
 import time
 import yt_dlp
 import json
+import subprocess
+import sys
 
 app = Flask(__name__)
 
@@ -16,7 +19,6 @@ stop_download = threading.Event()
 def my_hook(d):
     if stop_download.is_set():
         raise Exception("Download cancelado pelo usuário")
-        
     if d['status'] == 'downloading':
         download_id = d['filename']
         try:
@@ -28,7 +30,6 @@ def my_hook(d):
                 percentage = float(d.get('_percent_str', '0%').replace('%', '').strip())
         except Exception:
             percentage = 0
-            
         download_progress[download_id] = {
             'percentage': f"{percentage:.1f}%",
             'speed': d.get('_speed_str', 'N/A'),
@@ -47,32 +48,28 @@ def my_hook(d):
 def get_best_format(formats, quality):
     if quality == 'best':
         return 'bestvideo+bestaudio/best'
-    
     target_height = int(quality)
     best_format = None
     min_diff = float('inf')
-    
     for f in formats:
         if 'height' in f:
             diff = abs(f['height'] - target_height)
             if diff < min_diff:
                 min_diff = diff
                 best_format = f['format_id']
-    
     return best_format if best_format else 'bestvideo+bestaudio/best'
 
 def download_video(url, platform, video_quality, extract_audio):
     try:
         output_template = os.path.join('downloads', f'%(title)s.%(ext)s')
-        
         ydl_opts = {
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://www.youtube.com/'
             },
-            'username': '',  # Você pode deixar em branco
-            'password': '',  # Você pode deixar em branco
+            'username': '',  # Deixe em branco ou adicione um usuário se necessário
+            'password': '',  # Deixe em branco ou adicione uma senha se necessário
             'cookiefile': None,
             'no_warnings': True,
             'ignoreerrors': False,
@@ -88,24 +85,31 @@ def download_video(url, platform, video_quality, extract_audio):
             }],
             'progress_hooks': [my_hook],
         }
-        
+
         if extract_audio:
             ydl_opts['postprocessors'].append({
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferedquality': '192',
             })
-        
+
+        # Tenta usar cookies do navegador Chrome
+        try:
+            subprocess.run(['yt-dlp', '--cookies-from-browser', 'chrome', url], check=True)
+            ydl_opts['cookiesfrombrowser'] = ('chrome',)
+        except subprocess.CalledProcessError:
+            print("Não foi possível obter cookies do Chrome. Continuando sem cookies.")
+
         if platform == 'youtube':
             with yt_dlp.YoutubeDL() as ydl:
                 info = ydl.extract_info(url, download=False)
                 ydl_opts['format'] = get_best_format(info['formats'], video_quality)
         else:
             ydl_opts['format'] = 'best'
-        
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
-            
+
     except Exception as e:
         if str(e) == "Download cancelado pelo usuário":
             for key in download_progress:
@@ -132,19 +136,15 @@ def index():
         platform = request.form['platform']
         video_quality = request.form['video_quality']
         extract_audio = 'extract_audio' in request.form
-        
         global download_progress, current_download_thread, stop_download
         download_progress.clear()
         stop_download.clear()
-        
         current_download_thread = threading.Thread(
             target=download_video,
             args=(url, platform, video_quality, extract_audio)
         )
         current_download_thread.start()
-        
         return jsonify({"status": "started"})
-    
     return render_template('index.html')
 
 @app.route('/progress')
@@ -157,7 +157,6 @@ def progress():
             if not current_download_thread or not current_download_thread.is_alive():
                 break
             time.sleep(0.5)  # Atualiza a cada 0.5 segundos
-    
     return Response(generate(), mimetype='text/event-stream')
 
 @app.route('/cancel_download', methods=['POST'])
@@ -165,6 +164,14 @@ def cancel_download():
     global stop_download
     stop_download.set()
     return jsonify({"status": "canceling"})
+
+@app.route('/update_ytdlp', methods=['POST'])
+def update_ytdlp():
+    try:
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '-U', 'yt-dlp'], check=True)
+        return jsonify({"status": "success", "message": "yt-dlp atualizado com sucesso"})
+    except subprocess.CalledProcessError as e:
+        return jsonify({"status": "error", "message": f"Erro ao atualizar yt-dlp: {str(e)}"})
 
 if __name__ == '__main__':
     if not os.path.exists('downloads'):

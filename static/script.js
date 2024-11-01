@@ -1,4 +1,5 @@
 // static/script.js
+
 document.addEventListener('DOMContentLoaded', function() {
     const downloadForm = document.getElementById('download-form');
     const progressContainer = document.getElementById('progress-container');
@@ -6,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressText = document.getElementById('progress-text');
     const statusMessage = document.getElementById('status-message');
     const cancelButton = document.getElementById('cancel-button');
+    const updateYtdlpButton = document.getElementById('update-ytdlp');
+
     let eventSource = null;
 
     downloadForm.addEventListener('submit', function(e) {
@@ -18,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
         statusMessage.textContent = '';
         progressBar.style.width = '0%';
         progressBar.textContent = '0%';
-        
         document.getElementById('download-button').disabled = true;
 
         fetch('/', {
@@ -31,11 +33,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (eventSource) {
                     eventSource.close();
                 }
-                
                 eventSource = new EventSource('/progress');
                 eventSource.onmessage = function(event) {
                     const data = JSON.parse(event.data);
-                    
                     if (data.status === 'Cancelado') {
                         statusMessage.textContent = 'Download cancelado!';
                         cancelButton.style.display = 'none';
@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         eventSource.close();
                         return;
                     }
-                    
                     if (data.status === 'Erro') {
                         statusMessage.textContent = 'Erro no download!';
                         cancelButton.style.display = 'none';
@@ -51,14 +50,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         eventSource.close();
                         return;
                     }
-
                     // Atualiza a barra de progresso visualmente
                     let percentage = parseFloat(data.percentage.replace('%', ''));
                     progressBar.style.width = `${percentage}%`;
                     progressBar.textContent = `${percentage.toFixed(1)}%`;
                     // Força o navegador a renderizar a mudança
                     progressBar.offsetHeight;
-
                     if (data.status === 'Concluído') {
                         progressText.textContent = 'Download Completo!';
                         statusMessage.textContent = 'Download concluído com sucesso!';
@@ -69,7 +66,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         progressText.textContent = `Velocidade: ${data.speed || 'N/A'}, ETA: ${data.eta || 'N/A'}`;
                     }
                 };
-
                 eventSource.onerror = function() {
                     eventSource.close();
                     document.getElementById('download-button').disabled = false;
@@ -97,5 +93,17 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erro ao cancelar:', error);
             statusMessage.textContent = 'Erro ao cancelar o download!';
         });
+    });
+
+    updateYtdlpButton.addEventListener('click', function() {
+        fetch('/update_ytdlp', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('yt-dlp atualizado com sucesso!');
+                } else {
+                    alert('Erro ao atualizar yt-dlp: ' + data.message);
+                }
+            });
     });
 });
