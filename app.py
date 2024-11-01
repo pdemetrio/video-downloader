@@ -66,14 +66,25 @@ def download_video(url, platform, video_quality, extract_audio):
         output_template = os.path.join('downloads', f'%(title)s.%(ext)s')
         
         ydl_opts = {
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
-        },
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+                'Accept-Language': 'en-US,en;q=0.9',
+                'Referer': 'https://www.youtube.com/'
+            },
+            'username': '',  # Você pode deixar em branco
+            'password': '',  # Você pode deixar em branco
+            'cookiefile': None,
+            'no_warnings': True,
+            'ignoreerrors': False,
+            'no_color': True,
+            'restrictfilenames': True,
+            'geo_bypass': True,
+            'nocheckcertificate': True,
             'outtmpl': output_template,
             'format': 'bestvideo+bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegVideoConvertor',
-                'preferedformat': 'mp4',
+                'preferredformat': 'mp4',
             }],
             'progress_hooks': [my_hook],
         }
