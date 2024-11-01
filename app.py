@@ -1,6 +1,6 @@
 # app.py
 
-from flask import Flask, render_template, request, jsonify, Response
+from flask import Flask, render_template, request, jsonify, Response, send_file
 import os
 import threading
 import time
@@ -59,25 +59,9 @@ def get_best_format(formats, quality):
                 best_format = f['format_id']
     return best_format if best_format else 'bestvideo+bestaudio/best'
 
-def download_with_retry(url, ydl_opts, max_retries=5):
-    for attempt in range(max_retries):
-        try:
-            time.sleep(5 * (attempt + 1))  # Atraso exponencial
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-            return  # Sucesso, saia da função
-        except yt_dlp.utils.DownloadError as e:
-            if "Sign in to confirm you're not a bot" in str(e):
-                wait_time = 2 ** attempt  # Backoff exponencial
-                print(f"Tentativa {attempt + 1} falhou. Aguardando {wait_time} segundos.")
-                time.sleep(wait_time)
-            else:
-                raise  # Se for outro tipo de erro, levante a exceção
-    raise Exception("Número máximo de tentativas atingido")
-
 def download_video(url, platform, video_quality, extract_audio):
     try:
-        output_template = os.path.join('downloads', f'%(title)s.%(ext)s')
+        output_template = '%(title)s.%(ext)s'
         ydl_opts = {
             'http_headers': {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
@@ -116,26 +100,15 @@ def download_video(url, platform, video_quality, extract_audio):
         else:
             ydl_opts['format'] = 'best'
 
-        download_with_retry(url, ydl_opts)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            filename = ydl.prepare_filename(info)
+        
+        return filename
 
     except Exception as e:
-        if str(e) == "Download cancelado pelo usuário":
-            for key in download_progress:
-                download_progress[key] = {
-                    'percentage': '0%',
-                    'status': 'Cancelado',
-                    'speed': '',
-                    'eta': ''
-                }
-        else:
-            print(f"Erro ao baixar o vídeo: {e}")
-            for key in download_progress:
-                download_progress[key] = {
-                    'percentage': '0%',
-                    'status': 'Erro',
-                    'speed': '',
-                    'eta': ''
-                }
+        print(f"Erro ao baixar o vídeo: {e}")
+        return None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -147,12 +120,12 @@ def index():
         global download_progress, current_download_thread, stop_download
         download_progress.clear()
         stop_download.clear()
-        current_download_thread = threading.Thread(
-            target=download_video,
-            args=(url, platform, video_quality, extract_audio)
-        )
-        current_download_thread.start()
-        return jsonify({"status": "started"})
+        
+        filename = download_video(url, platform, video_quality, extract_audio)
+        if filename:
+            return jsonify({"status": "completed", "filename": filename})
+        else:
+            return jsonify({"status": "error"})
     return render_template('index.html')
 
 @app.route('/progress')
@@ -180,6 +153,10 @@ def update_ytdlp():
         return jsonify({"status": "success", "message": "yt-dlp atualizado com sucesso"})
     except subprocess.CalledProcessError as e:
         return jsonify({"status": "error", "message": f"Erro ao atualizar yt-dlp: {str(e)}"})
+
+@app.route('/download_file/<path:filename>')
+def download_file(filename):
+    return send_file(filename, as_attachment=True)
 
 if __name__ == '__main__':
     if not os.path.exists('downloads'):

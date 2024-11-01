@@ -29,7 +29,18 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
-            if (data.status === 'started') {
+            if (data.status === 'completed') {
+                statusMessage.textContent = 'Download concluído com sucesso!';
+                cancelButton.style.display = 'none';
+                document.getElementById('download-button').disabled = false;
+                
+                // Inicia o download do arquivo
+                window.location.href = `/download_file/${encodeURIComponent(data.filename)}`;
+            } else if (data.status === 'error') {
+                statusMessage.textContent = 'Erro no download!';
+                cancelButton.style.display = 'none';
+                document.getElementById('download-button').disabled = false;
+            } else if (data.status === 'started') {
                 if (eventSource) {
                     eventSource.close();
                 }
