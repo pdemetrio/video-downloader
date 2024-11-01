@@ -59,6 +59,22 @@ def get_best_format(formats, quality):
                 best_format = f['format_id']
     return best_format if best_format else 'bestvideo+bestaudio/best'
 
+def download_with_retry(url, ydl_opts, max_retries=5):
+    for attempt in range(max_retries):
+        try:
+            time.sleep(5 * (attempt + 1))  # Atraso exponencial
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+            return  # Sucesso, saia da função
+        except yt_dlp.utils.DownloadError as e:
+            if "Sign in to confirm you're not a bot" in str(e):
+                wait_time = 2 ** attempt  # Backoff exponencial
+                print(f"Tentativa {attempt + 1} falhou. Aguardando {wait_time} segundos.")
+                time.sleep(wait_time)
+            else:
+                raise  # Se for outro tipo de erro, levante a exceção
+    raise Exception("Número máximo de tentativas atingido")
+
 def download_video(url, platform, video_quality, extract_audio):
     try:
         output_template = os.path.join('downloads', f'%(title)s.%(ext)s')
@@ -68,8 +84,8 @@ def download_video(url, platform, video_quality, extract_audio):
                 'Accept-Language': 'en-US,en;q=0.9',
                 'Referer': 'https://www.youtube.com/'
             },
-            'username': '',  # Deixe em branco ou adicione um usuário se necessário
-            'password': '',  # Deixe em branco ou adicione uma senha se necessário
+            'username': '',
+            'password': '',
             'cookiefile': None,
             'no_warnings': True,
             'ignoreerrors': False,
@@ -93,13 +109,6 @@ def download_video(url, platform, video_quality, extract_audio):
                 'preferedquality': '192',
             })
 
-        # Tenta usar cookies do navegador Chrome
-        try:
-            subprocess.run(['yt-dlp', '--cookies-from-browser', 'chrome', url], check=True)
-            ydl_opts['cookiesfrombrowser'] = ('chrome',)
-        except subprocess.CalledProcessError:
-            print("Não foi possível obter cookies do Chrome. Continuando sem cookies.")
-
         if platform == 'youtube':
             with yt_dlp.YoutubeDL() as ydl:
                 info = ydl.extract_info(url, download=False)
@@ -107,8 +116,7 @@ def download_video(url, platform, video_quality, extract_audio):
         else:
             ydl_opts['format'] = 'best'
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+        download_with_retry(url, ydl_opts)
 
     except Exception as e:
         if str(e) == "Download cancelado pelo usuário":
@@ -168,7 +176,7 @@ def cancel_download():
 @app.route('/update_ytdlp', methods=['POST'])
 def update_ytdlp():
     try:
-        subprocess.run([sys.executable, '-m', 'pip', 'install', '-U', 'yt-dlp'], check=True)
+        subprocess.run([sys.executable, "-m", "pip", "install", "-U", "yt-dlp"], check=True)
         return jsonify({"status": "success", "message": "yt-dlp atualizado com sucesso"})
     except subprocess.CalledProcessError as e:
         return jsonify({"status": "error", "message": f"Erro ao atualizar yt-dlp: {str(e)}"})
