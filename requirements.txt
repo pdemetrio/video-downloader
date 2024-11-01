@@ -4,6 +4,17 @@ Werkzeug==2.0.1
 requests>=2.32.2
 yt-dlp==2024.10.22
 pytube==15.0.0
+ffmpeg-python
+
+services:
+  - type: web
+    name: video-downloader
+    env: python
+    buildCommand: ./build.sh
+    startCommand: python app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.10
 
 # Se você estiver usando outras bibliotecas, adicione-as aqui
 
