@@ -84,7 +84,7 @@ def download_video(url, platform, video_quality, extract_audio):
             'format': 'bestvideo+bestaudio/best',
             'postprocessors': [{
                 'key': 'FFmpegVideoConvertor',
-                'preferredformat': 'mp4',
+                'preferedformat': 'mp4',
             }],
             'progress_hooks': [my_hook],
         }
@@ -93,7 +93,7 @@ def download_video(url, platform, video_quality, extract_audio):
             ydl_opts['postprocessors'].append({
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',
+                'preferedquality': '192',
             })
         
         if platform == 'youtube':
